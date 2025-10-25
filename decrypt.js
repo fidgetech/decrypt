@@ -1,20 +1,29 @@
 import fs from 'fs';
-import crypto from 'crypto';
+// import crypto from 'crypto';
+import forge from 'node-forge';
 
 const privateKeyPath = 'private_key.pem';
 const importFilename = 'input.csv';
 const exportFilename = 'export.csv';
-const privateKey = crypto.createPrivateKey({ key: fs.readFileSync(privateKeyPath) });
+
+// const privateKey = crypto.createPrivateKey({ key: fs.readFileSync(privateKeyPath) });
+const privateKey = forge.pki.privateKeyFromPem(fs.readFileSync(privateKeyPath).toString());
+
+console.log('Starting decryption process...');
 
 const decrypt = (encryptedValue) => {
   try {
-    return crypto.privateDecrypt(
-      {
-        key: privateKey,
-        padding: crypto.constants.RSA_PKCS1_PADDING,
-      },
-      Buffer.from(encryptedValue, 'base64')
-    ).toString();
+    return privateKey.decrypt(
+      forge.util.decode64(encryptedValue),
+      'RSAES-PKCS1-V1_5'
+    );
+    // return crypto.privateDecrypt(
+    //   {
+    //     key: privateKey,
+    //     padding: crypto.constants.RSA_PKCS1_PADDING,
+    //   },
+    //   Buffer.from(encryptedValue, 'base64')
+    // ).toString();
   } catch (error) {
     console.error(`Decryption error: ${error.message}`);
   }
